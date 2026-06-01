@@ -9,8 +9,10 @@ AFAD-Full / AFAD-Lite 데이터셋 로더.
 프로젝트 공통 컨벤션 (IMDB-WIKI / core.types.AttributeResult) 에 맞춰
 gender 는 0=female, 1=male 로 변환해서 반환한다.
 """
-import os
+
 import glob
+import os
+
 from PIL import Image
 from torch.utils.data import Dataset
 

@@ -18,19 +18,20 @@ NOTE
 load_model / build_transform / predict_faces 만 modules/attribute/attribute.py
 에서 재사용한다.
 """
+
 import argparse
 import os
 
 import cv2
 import torch
 import torch.nn.functional as F
+from model import MobileNetAgeGender
 from PIL import Image
 from torchvision import transforms
 
-from model import MobileNetAgeGender
-
 try:
     from facenet_pytorch import MTCNN
+
     HAS_MTCNN = True
 except ImportError:
     HAS_MTCNN = False
@@ -39,18 +40,22 @@ except ImportError:
 def load_model(ckpt_path: str, device: str, width_mult: float = 1.0):
     model = MobileNetAgeGender(width_mult=width_mult, pretrained=False).to(device)
     ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
-    state = ckpt["state_dict"] if isinstance(ckpt, dict) and "state_dict" in ckpt else ckpt
+    state = (
+        ckpt["state_dict"] if isinstance(ckpt, dict) and "state_dict" in ckpt else ckpt
+    )
     model.load_state_dict(state)
     model.eval()
     return model
 
 
 def build_transform(img_size: int = 112):
-    return transforms.Compose([
-        transforms.Resize((img_size, img_size)),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-    ])
+    return transforms.Compose(
+        [
+            transforms.Resize((img_size, img_size)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    )
 
 
 @torch.no_grad()
@@ -84,7 +89,7 @@ def run(args):
             return
         faces, crop_boxes = [], []
         W, H = img_pil.size
-        for (x1, y1, x2, y2) in boxes.astype(int):
+        for x1, y1, x2, y2 in boxes.astype(int):
             # 40% margin (IMDB-WIKI crop 정책과 비슷하게)
             m = int(0.4 * max(x2 - x1, y2 - y1) * 0.5)
             x1, y1 = max(0, x1 - m), max(0, y1 - m)
@@ -92,7 +97,9 @@ def run(args):
             faces.append(img_pil.crop((x1, y1, x2, y2)))
             crop_boxes.append((x1, y1, x2, y2))
     else:
-        print("[warn] facenet-pytorch not installed; treating input as pre-cropped face.")
+        print(
+            "[warn] facenet-pytorch not installed; treating input as pre-cropped face."
+        )
         faces = [img_pil]
         crop_boxes = [(0, 0, img_pil.width, img_pil.height)]
 
@@ -101,9 +108,16 @@ def run(args):
     for (x1, y1, x2, y2), g, a in zip(crop_boxes, genders, ages):
         label = f"{'M' if g == 1 else 'F'}, {a:.1f}"
         cv2.rectangle(img_bgr, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(img_bgr, label, (x1, max(12, y1 - 4)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
-        print(f"box=({x1},{y1},{x2},{y2}) gender={'M' if g==1 else 'F'} age={a:.1f}")
+        cv2.putText(
+            img_bgr,
+            label,
+            (x1, max(12, y1 - 4)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.4,
+            (0, 255, 0),
+            1,
+        )
+        print(f"box=({x1},{y1},{x2},{y2}) gender={'M' if g == 1 else 'F'} age={a:.1f}")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     cv2.imwrite(args.out, img_bgr)
@@ -112,10 +126,10 @@ def run(args):
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--ckpt",  type=str, required=True)
+    p.add_argument("--ckpt", type=str, required=True)
     p.add_argument("--image", type=str, required=True)
-    p.add_argument("--out",   type=str, default="outputs/out.jpg")
-    p.add_argument("--img_size",   type=int,   default=112)
+    p.add_argument("--out", type=str, default="outputs/out.jpg")
+    p.add_argument("--img_size", type=int, default=112)
     p.add_argument("--width_mult", type=float, default=1.0)
     return p.parse_args()
 
