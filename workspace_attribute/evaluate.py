@@ -4,16 +4,16 @@
 사용:
   python evaluate.py --ckpt checkpoints/best.pth --afad_root tarball/AFAD-Full
 """
+
 import argparse
 
 import torch
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
-
 from dataset import AFADDataset, load_afad_items
 from model import MobileNetAgeGender
-from transforms import build_transforms
+from torch.utils.data import DataLoader
 from train import split_train_val
+from transforms import build_transforms
 
 
 def main(args):
@@ -24,22 +24,33 @@ def main(args):
 
     _, val_tf = build_transforms(args.img_size)
     val_ds = AFADDataset(val_items, transform=val_tf)
-    loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False,
-                        num_workers=args.num_workers, pin_memory=True)
+    loader = DataLoader(
+        val_ds,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+        pin_memory=True,
+    )
 
     model = MobileNetAgeGender(width_mult=args.width_mult, pretrained=False).to(device)
     ckpt = torch.load(args.ckpt, map_location=device, weights_only=False)
-    state = ckpt["state_dict"] if isinstance(ckpt, dict) and "state_dict" in ckpt else ckpt
+    state = (
+        ckpt["state_dict"] if isinstance(ckpt, dict) and "state_dict" in ckpt else ckpt
+    )
     model.load_state_dict(state)
     model.eval()
 
     age_idx = torch.arange(0, 101, device=device, dtype=torch.float32)
     mae_sum = gacc_sum = n = 0
-    tp = [0, 0]; fp = [0, 0]; fn = [0, 0]
+    tp = [0, 0]
+    fp = [0, 0]
+    fn = [0, 0]
 
     with torch.no_grad():
         for x, g, a in loader:
-            x = x.to(device); g = g.to(device); a = a.to(device)
+            x = x.to(device)
+            g = g.to(device)
+            a = a.to(device)
             logit_g, logit_a = model(x)
             pred_age = (F.softmax(logit_a.float(), dim=1) * age_idx).sum(dim=1)
             pred_g = logit_g.argmax(1)
@@ -62,14 +73,14 @@ def main(args):
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--ckpt",      required=True)
+    p.add_argument("--ckpt", required=True)
     p.add_argument("--afad_root", default="tarball/AFAD-Full")
-    p.add_argument("--img_size",    type=int,   default=112)
-    p.add_argument("--batch_size",  type=int,   default=512)
-    p.add_argument("--num_workers", type=int,   default=8)
-    p.add_argument("--width_mult",  type=float, default=1.0)
-    p.add_argument("--val_ratio",   type=float, default=0.1)
-    p.add_argument("--seed",        type=int,   default=42)
+    p.add_argument("--img_size", type=int, default=112)
+    p.add_argument("--batch_size", type=int, default=512)
+    p.add_argument("--num_workers", type=int, default=8)
+    p.add_argument("--width_mult", type=float, default=1.0)
+    p.add_argument("--val_ratio", type=float, default=0.1)
+    p.add_argument("--seed", type=int, default=42)
     return p.parse_args()
 
 

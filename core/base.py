@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List
+
 import numpy as np
 
-from core.types import DetectionResult, LandmarkResult, AttributeResult
+from core.types import AttributeResult, DetectionResult, LandmarkResult
 
 
 class BaseModule(ABC):
@@ -36,29 +36,32 @@ class BaseFaceDetector(BaseModule):
     def predict(self, image: np.ndarray) -> DetectionResult: ...
 
     @abstractmethod
-    def visualize(self, image: np.ndarray,
-                  result: DetectionResult) -> np.ndarray: ...
+    def visualize(self, image: np.ndarray, result: DetectionResult) -> np.ndarray: ...
 
 
 class BaseLandmarkDetector(BaseModule):
     """B모듈 (PFLD 등)"""
 
     @abstractmethod
-    def predict(self, image: np.ndarray,
-                detection: DetectionResult) -> List[LandmarkResult]: ...
+    def predict(
+        self, image: np.ndarray, detection: DetectionResult
+    ) -> list[LandmarkResult]: ...
 
     @abstractmethod
-    def visualize(self, image: np.ndarray,
-                  results: List[LandmarkResult]) -> np.ndarray: ...
+    def visualize(
+        self, image: np.ndarray, results: list[LandmarkResult]
+    ) -> np.ndarray: ...
 
 
 class BaseFaceAttribute(BaseModule):
     """C모듈 (MobileNetV2 등)"""
 
     @abstractmethod
-    def predict(self, image: np.ndarray,
-                detection: DetectionResult) -> List[AttributeResult]: ...
+    def predict(
+        self, image: np.ndarray, detection: DetectionResult
+    ) -> list[AttributeResult]: ...
 
     @abstractmethod
-    def visualize(self, image: np.ndarray,
-                  results: List[AttributeResult]) -> np.ndarray: ...
+    def visualize(
+        self, image: np.ndarray, results: list[AttributeResult]
+    ) -> np.ndarray: ...

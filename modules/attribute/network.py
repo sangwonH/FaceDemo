@@ -8,6 +8,7 @@ attribute 이름 (features / pool / head_gender / head_age) 을 변경하지 말
 추론 시 age 는 softmax expectation 으로 연속값을 얻는다 (DEX, Rothe et al.):
   E[age] = Σ softmax(age_logits)_i · i,   i = 0..100
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,10 +16,7 @@ from torchvision.models import mobilenet_v2
 
 
 class MobileNetV2GenderAge(nn.Module):
-    def __init__(self,
-                 num_age: int = 101,
-                 num_gender: int = 2,
-                 dropout: float = 0.2):
+    def __init__(self, num_age: int = 101, num_gender: int = 2, dropout: float = 0.2):
         super().__init__()
         backbone = mobilenet_v2(weights=None)
         self.features = backbone.features

@@ -1,11 +1,13 @@
 from dataclasses import dataclass, field
-from typing import List, Literal
+from typing import Literal
+
 import numpy as np
 
 
 @dataclass
 class FaceBBox:
     """얼굴 1개의 바운딩 박스"""
+
     x1: float
     y1: float
     x2: float
@@ -28,19 +30,22 @@ class FaceBBox:
 @dataclass
 class DetectionResult:
     """A모듈(RetinaFace) 출력 — 한 프레임의 모든 얼굴"""
-    bboxes: List[FaceBBox] = field(default_factory=list)
+
+    bboxes: list[FaceBBox] = field(default_factory=list)
 
 
 @dataclass
 class LandmarkResult:
     """B모듈(PFLD) 출력 — 얼굴 1개당 1개"""
+
     bbox: FaceBBox
-    landmarks: np.ndarray   # shape: (N, 2)
+    landmarks: np.ndarray  # shape: (N, 2)
 
 
 @dataclass
 class AttributeResult:
     """C모듈(MobileNetV2) 출력 — 얼굴 1개당 1개"""
+
     bbox: FaceBBox
     gender: Literal["male", "female"]
     gender_confidence: float

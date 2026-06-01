@@ -8,6 +8,7 @@ MobileNetV2 기반 age & gender estimator.
 torchvision의 ImageNet pretrained MobileNetV2를 백본으로 사용해서
 gender/age 두 개의 head만 새로 학습.
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,12 +16,14 @@ from torchvision import models
 
 
 class MobileNetAgeGender(nn.Module):
-    def __init__(self,
-                 num_age: int = 101,
-                 num_gender: int = 2,
-                 width_mult: float = 1.0,
-                 pretrained: bool = True,
-                 dropout: float = 0.2):
+    def __init__(
+        self,
+        num_age: int = 101,
+        num_gender: int = 2,
+        width_mult: float = 1.0,
+        pretrained: bool = True,
+        dropout: float = 0.2,
+    ):
         """
         Args:
             num_age:    age 출력 차원 (기본 101 → 0..100)
@@ -36,8 +39,10 @@ class MobileNetAgeGender(nn.Module):
             backbone = models.mobilenet_v2(weights=weights)
         else:
             if pretrained:
-                print(f"[warn] pretrained weights unavailable for width_mult={width_mult}; "
-                      "training from scratch.")
+                print(
+                    f"[warn] pretrained weights unavailable for width_mult={width_mult}; "
+                    "training from scratch."
+                )
             backbone = models.mobilenet_v2(width_mult=width_mult)
 
         self.features = backbone.features
@@ -75,5 +80,7 @@ if __name__ == "__main__":
         x = torch.randn(2, 3, 112, 112)
         g, a = m(x)
         n_params = sum(p.numel() for p in m.parameters())
-        print(f"width_mult={wm}: gender={tuple(g.shape)}, age={tuple(a.shape)}, "
-              f"params={n_params/1e6:.2f}M")
+        print(
+            f"width_mult={wm}: gender={tuple(g.shape)}, age={tuple(a.shape)}, "
+            f"params={n_params / 1e6:.2f}M"
+        )

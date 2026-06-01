@@ -12,6 +12,7 @@ A모듈이 준비되면 detect_faces_mtcnn() 호출부만 RetinaFaceDetector 로
 의존성:
   pip install facenet-pytorch
 """
+
 import argparse
 import os
 
@@ -49,17 +50,17 @@ def detect_faces_mtcnn(image_bgr: np.ndarray, device: str) -> DetectionResult:
         y1 = max(0, int(y1) - m)
         x2 = min(W, int(x2) + m)
         y2 = min(H, int(y2) + m)
-        bboxes.append(FaceBBox(x1=x1, y1=y1, x2=x2, y2=y2,
-                               confidence=float(p)))
+        bboxes.append(FaceBBox(x1=x1, y1=y1, x2=x2, y2=y2, confidence=float(p)))
     return DetectionResult(bboxes=bboxes)
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--image", required=True, help="입력 이미지 경로")
-    p.add_argument("--out",   default="outputs/c_demo.jpg")
-    p.add_argument("--ckpt",
-                   default="modules/attribute/weights/mobilenet_age_gender.pth")
+    p.add_argument("--out", default="outputs/c_demo.jpg")
+    p.add_argument(
+        "--ckpt", default="modules/attribute/weights/mobilenet_age_gender.pth"
+    )
     p.add_argument("--device", default="cuda")
     args = p.parse_args()
 
@@ -79,10 +80,12 @@ def main():
     out = attr.visualize(image, results)
 
     for r in results:
-        print(f"  → {r.gender:>6} (conf={r.gender_confidence:.2f})  "
-              f"age={r.age:.1f}  "
-              f"bbox=({r.bbox.x1:.0f},{r.bbox.y1:.0f},"
-              f"{r.bbox.x2:.0f},{r.bbox.y2:.0f})")
+        print(
+            f"  → {r.gender:>6} (conf={r.gender_confidence:.2f})  "
+            f"age={r.age:.1f}  "
+            f"bbox=({r.bbox.x1:.0f},{r.bbox.y1:.0f},"
+            f"{r.bbox.x2:.0f},{r.bbox.y2:.0f})"
+        )
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     cv2.imwrite(args.out, out)

@@ -4,18 +4,21 @@
 사용:
   python scripts/export_to_module.py --ckpt checkpoints/best.pth
 """
+
 import argparse
 import shutil
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_DST = REPO_ROOT / "modules" / "attribute" / "weights" / "mobilenet_age_gender.pth"
+DEFAULT_DST = (
+    REPO_ROOT / "modules" / "attribute" / "weights" / "mobilenet_age_gender.pth"
+)
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--ckpt", default="checkpoints/best.pth")
-    p.add_argument("--dst",  default=str(DEFAULT_DST))
+    p.add_argument("--dst", default=str(DEFAULT_DST))
     args = p.parse_args()
 
     src = Path(args.ckpt).resolve()

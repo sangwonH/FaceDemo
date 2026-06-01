@@ -14,6 +14,7 @@
 실행 (프로젝트 루트):
   python -m pipeline.webcam_demo --cam 0
 """
+
 import argparse
 import time
 
@@ -51,19 +52,19 @@ class MTCNNDetector:
         bboxes = []
         for (x1, y1, x2, y2), p in zip(boxes, probs):
             m = int(0.4 * max(x2 - x1, y2 - y1) * 0.5)
-            x1 = max(0, int(x1) - m); y1 = max(0, int(y1) - m)
-            x2 = min(W, int(x2) + m); y2 = min(H, int(y2) + m)
-            bboxes.append(FaceBBox(x1=x1, y1=y1, x2=x2, y2=y2,
-                                   confidence=float(p)))
+            x1 = max(0, int(x1) - m)
+            y1 = max(0, int(y1) - m)
+            x2 = min(W, int(x2) + m)
+            y2 = min(H, int(y2) + m)
+            bboxes.append(FaceBBox(x1=x1, y1=y1, x2=x2, y2=y2, confidence=float(p)))
         return DetectionResult(bboxes=bboxes)
 
-    def visualize(self, image: np.ndarray,
-                  result: DetectionResult) -> np.ndarray:
+    def visualize(self, image: np.ndarray, result: DetectionResult) -> np.ndarray:
         out = image.copy()
         for b in result.bboxes:
-            cv2.rectangle(out,
-                          (int(b.x1), int(b.y1)), (int(b.x2), int(b.y2)),
-                          self.BOX_COLOR, 1)
+            cv2.rectangle(
+                out, (int(b.x1), int(b.y1)), (int(b.x2), int(b.y2)), self.BOX_COLOR, 1
+            )
         return out
 
 
@@ -80,14 +81,16 @@ class NullLandmark:
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--cam",    type=int, default=0)
-    p.add_argument("--width",  type=int, default=640)
+    p.add_argument("--cam", type=int, default=0)
+    p.add_argument("--width", type=int, default=640)
     p.add_argument("--height", type=int, default=480)
     p.add_argument("--device", default="cuda")
-    p.add_argument("--ckpt",
-                   default="modules/attribute/weights/mobilenet_age_gender.pth")
-    p.add_argument("--no_mirror", action="store_true",
-                   help="좌우 반전 끄기 (기본은 거울 모드)")
+    p.add_argument(
+        "--ckpt", default="modules/attribute/weights/mobilenet_age_gender.pth"
+    )
+    p.add_argument(
+        "--no_mirror", action="store_true", help="좌우 반전 끄기 (기본은 거울 모드)"
+    )
     args = p.parse_args()
 
     # ---- 모듈 인스턴스 (모델은 한 번만 로드) ----
@@ -105,7 +108,7 @@ def main():
 
     # ---- 웹캠 ----
     cap = cv2.VideoCapture(args.cam)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,  args.width)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
     if not cap.isOpened():
         raise RuntimeError(f"카메라 {args.cam} 를 열 수 없습니다.")
@@ -143,24 +146,32 @@ def main():
             fps = 0.9 * fps + 0.1 * inst if fps else inst
             t_prev = t_now
 
-            toggles = (f"B[{'on' if show_bbox     else 'off'}] "
-                       f"L[{'on' if show_landmark else 'off'}] "
-                       f"A[{'on' if show_attribute else 'off'}]")
-            cv2.putText(vis, f"FPS {fps:5.1f}  faces {len(det_result.bboxes)}  {toggles}",
-                        (8, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.55,
-                        (0, 255, 255), 1)
+            toggles = (
+                f"B[{'on' if show_bbox else 'off'}] "
+                f"L[{'on' if show_landmark else 'off'}] "
+                f"A[{'on' if show_attribute else 'off'}]"
+            )
+            cv2.putText(
+                vis,
+                f"FPS {fps:5.1f}  faces {len(det_result.bboxes)}  {toggles}",
+                (8, 22),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.55,
+                (0, 255, 255),
+                1,
+            )
 
             cv2.imshow(win, vis)
             key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
+            if key == ord("q"):
                 break
-            elif key == ord('b'):
+            elif key == ord("b"):
                 show_bbox = not show_bbox
                 print(f"[toggle] bbox      = {show_bbox}")
-            elif key == ord('l'):
+            elif key == ord("l"):
                 show_landmark = not show_landmark
                 print(f"[toggle] landmark  = {show_landmark}")
-            elif key == ord('a'):
+            elif key == ord("a"):
                 show_attribute = not show_attribute
                 print(f"[toggle] attribute = {show_attribute}")
     finally:
