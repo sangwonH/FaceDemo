@@ -115,19 +115,14 @@ class PFLDLandmarkDetector(BaseLandmarkDetector):
             tensors.append(self._preprocess(crop))
             valid_bboxes.append(bbox)
 
-        cv2.imwrite("debug.png", crop)
-
         if not tensors:
             return []
 
         batch = torch.from_numpy(np.stack(tensors)).to(self.device)
         batch = batch.permute(0, 3, 1, 2)
-        print(batch.shape)
         B = len(tensors)
         landmarks = self.model(batch)
         landmarks = landmarks.reshape(B, self.NUM_LANDMARKS, -1)
-
-        print(landmarks.shape)
 
         return [
             LandmarkResult(
