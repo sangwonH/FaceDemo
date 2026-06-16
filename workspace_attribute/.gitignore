@@ -1,6 +1,0 @@
-tarball/
-data/
-runs/
-outputs/
-checkpoints/*
-!checkpoints/.gitkeep
