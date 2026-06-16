@@ -100,7 +100,7 @@ def main():
     b_landmark = NullLandmark()
     print("[init] C: MobileNetV2Attribute")
     c_attribute = MobileNetV2Attribute(model_path=args.ckpt, device=args.device)
-# 완성 후 교체 예시:
+    # 완성 후 교체 예시:
     #   from modules.detection.detector import RetinaFaceDetector
     #   from modules.landmark.landmark import PFLDLandmark
     #   # model_path 생략 시 기본 가중치(./weights/combined_100pct_final.pth) 사용
