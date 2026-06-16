@@ -1,0 +1,7 @@
+# torch / torchvision 은 README 의 안내에 따라 CUDA 휠로 별도 설치
+# (pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126)
+pillow
+numpy
+opencv-python
+facenet-pytorch
+tqdm
