@@ -24,5 +24,8 @@ runs/
 outputs/
 *.log
 
+# 빌드
+dist/
+
 # 환경변수
 .env

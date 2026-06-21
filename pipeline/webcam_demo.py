@@ -16,77 +16,45 @@
 """
 
 import argparse
+import sys
 import time
+from pathlib import Path
 
 import cv2
-import numpy as np
-from PIL import Image
+import torch
 
-from core.types import DetectionResult, FaceBBox
 from modules.attribute.attribute import MobileNetV2Attribute
-
-try:
-    from facenet_pytorch import MTCNN
-except ImportError as e:
-    raise SystemExit("facenet-pytorch 필요: pip install facenet-pytorch") from e
+from modules.detection.detector import RetinaFaceDetector
+from modules.landmark.landmark import PFLDLandmarkDetector
 
 
-# ---------------------------------------------------------------------
-# A모듈 placeholder — MTCNN
-# RetinaFaceDetector 완성 시 이 클래스 통째로 제거하고 import 로 교체.
-# ---------------------------------------------------------------------
-class MTCNNDetector:
-    BOX_COLOR = (0, 255, 0)
-
-    def __init__(self, device: str):
-        self.detector = MTCNN(keep_all=True, device=device)
-        self.device = device
-
-    def predict(self, image: np.ndarray) -> DetectionResult:
-        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        boxes, probs = self.detector.detect(Image.fromarray(rgb))
-        if boxes is None:
-            return DetectionResult(bboxes=[])
-
-        H, W = image.shape[:2]
-        bboxes = []
-        for (x1, y1, x2, y2), p in zip(boxes, probs):
-            m = int(0.4 * max(x2 - x1, y2 - y1) * 0.5)
-            x1 = max(0, int(x1) - m)
-            y1 = max(0, int(y1) - m)
-            x2 = min(W, int(x2) + m)
-            y2 = min(H, int(y2) + m)
-            bboxes.append(FaceBBox(x1=x1, y1=y1, x2=x2, y2=y2, confidence=float(p)))
-        return DetectionResult(bboxes=bboxes)
-
-    def visualize(self, image: np.ndarray, result: DetectionResult) -> np.ndarray:
-        out = image.copy()
-        for b in result.bboxes:
-            cv2.rectangle(
-                out, (int(b.x1), int(b.y1)), (int(b.x2), int(b.y2)), self.BOX_COLOR, 1
-            )
-        return out
+def resource_path(relative_path: str) -> str:
+    if hasattr(sys, "_MEIPASS"):
+        return str(Path(sys._MEIPASS) / relative_path)
+    return str(Path(__file__).resolve().parents[1] / relative_path)
 
 
-# ---------------------------------------------------------------------
-# B모듈 placeholder — landmark 비활성. PFLDLandmark 완성 시 교체.
-# ---------------------------------------------------------------------
-class NullLandmark:
-    def predict(self, image: np.ndarray, detection: DetectionResult):
-        return []
-
-    def visualize(self, image: np.ndarray, results) -> np.ndarray:
-        return image
-
+def default_device() -> str:
+    return "cuda" if torch.cuda.is_available() else "cpu"
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--cam", type=int, default=0)
     p.add_argument("--width", type=int, default=640)
     p.add_argument("--height", type=int, default=480)
-    p.add_argument("--device", default="cuda")
+    # p.add_argument("--device", default="cuda")
+    p.add_argument("--device", default=default_device())
     p.add_argument(
-        "--ckpt", default="modules/attribute/weights/mobilenet_age_gender.pth"
+        "--ckpt_det",
+        default=resource_path("modules/detection/weights/combined_100pct_final.pth"),
+    )
+    p.add_argument(
+        "--ckpt_landmark",
+        default=resource_path("modules/landmark/weights/pfld_100_retina_train.pth.tar"),
+    )
+    p.add_argument(
+        "--ckpt_attribute",
+        default=resource_path("modules/attribute/weights/mobilenet_age_gender.pth"),
     )
     p.add_argument(
         "--no_mirror", action="store_true", help="좌우 반전 끄기 (기본은 거울 모드)"
@@ -94,19 +62,13 @@ def main():
     args = p.parse_args()
 
     # ---- 모듈 인스턴스 (모델은 한 번만 로드) ----
-    print("[init] A: MTCNN (placeholder for RetinaFaceDetector)")
-    a_detector = MTCNNDetector(device=args.device)
-    print("[init] B: NullLandmark (placeholder for PFLDLandmark)")
-    b_landmark = NullLandmark()
+    print("[init] A: RetinaFaceDetector")
+    a_detector = RetinaFaceDetector(model_path=args.ckpt_det, device=args.device)
+    print("[init] B: PFLDLandmark")
+    b_landmark = PFLDLandmarkDetector(model_path=args.ckpt_landmark, device=args.device)
     print("[init] C: MobileNetV2Attribute")
-    c_attribute = MobileNetV2Attribute(model_path=args.ckpt, device=args.device)
-    # 완성 후 교체 예시:
-    #   from modules.detection.detector import RetinaFaceDetector
-    #   from modules.landmark.landmark import PFLDLandmark
-    #   # model_path 생략 시 기본 가중치(./weights/combined_100pct_final.pth) 사용
-    #   a_detector = RetinaFaceDetector(device=args.device)
-    #   b_landmark = PFLDLandmark      (model_path="modules/landmark/weights/...", device=args.device)
-
+    c_attribute = MobileNetV2Attribute(model_path=args.ckpt_attribute,
+                                       device=args.device)
     # ---- 웹캠 ----
     cap = cv2.VideoCapture(args.cam)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)

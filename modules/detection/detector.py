@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 import cv2
 import numpy as np
@@ -86,7 +86,7 @@ class RetinaFaceDetector(BaseFaceDetector):
     # 학습 시 사용한 BGR 평균 (data_augment 와 동일)
     _RGB_MEAN = (104, 117, 123)
 
-    def __init__(self, model_path: str | None = None, device: str = "cuda"):
+    def __init__(self, model_path: Optional[str] = None, device: str = "cuda"):
         # model_path 생략 시 DEFAULT_MODEL_PATH(v1 통합 검출기) 사용.
         super().__init__(model_path or self.DEFAULT_MODEL_PATH, device)
 
