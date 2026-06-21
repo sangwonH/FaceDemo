@@ -42,7 +42,6 @@ def main():
     p.add_argument("--cam", type=int, default=0)
     p.add_argument("--width", type=int, default=640)
     p.add_argument("--height", type=int, default=480)
-    # p.add_argument("--device", default="cuda")
     p.add_argument("--device", default=default_device())
     p.add_argument(
         "--ckpt_det",

@@ -149,7 +149,6 @@ class MobileNetV2Attribute(BaseFaceAttribute):
             initial = "M" if r.gender == "male" else "F"
             label = f"{initial} {r.gender_confidence:.2f}, {r.age:.0f}y"
 
-            #cv2.rectangle(out, (x1, y1), (x2, y2), self.BOX_COLOR, self.LINE_THICKNESS)
             cv2.putText(
                 out,
                 label,
