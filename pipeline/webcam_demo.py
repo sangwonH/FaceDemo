@@ -2,8 +2,6 @@
 웹캠 + 통합 파이프라인 (A → B → C) 데모.
 
 각 모듈의 predict / visualize 를 순서대로 호출해 결과를 누적 시각화한다.
-현재 A모듈(RetinaFace), B모듈(PFLD) 이 미완성이라 placeholder 사용.
-완성되면 main() 안의 인스턴스 두 줄만 교체.
 
 조작:
   b  bbox (A)        토글

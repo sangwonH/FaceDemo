@@ -26,6 +26,8 @@ outputs/
 
 # 빌드
 dist/
+build/
+FaceDemo.spec
 
 # 환경변수
 .env
